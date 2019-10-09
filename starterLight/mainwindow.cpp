@@ -137,6 +137,52 @@ MyMesh::Point MainWindow::getNormalFace(MyMesh* _mesh,VertexHandle v0, VertexHan
 
 }
 
+void MainWindow::dihedralAngles(MyMesh *_mesh)
+{
+    qDebug() << __FUNCTION__;
+    /**
+     * @brief dihedralAngles
+     * @param _mesh
+     * @details Pour chaque arête calculer l'angle entre les 2 normales des 2 faces concourantes.
+     */
+
+    for (MyMesh::EdgeIter e_it = _mesh->edges_sbegin(); e_it != _mesh->edges_end(); e_it++) {
+        MyMesh::HalfedgeHandle heh_first = _mesh->halfedge_handle(e_it, 0);
+        MyMesh::HalfedgeHandle heh_second = _mesh->halfedge_handle(e_it, 1);
+        MyMesh::FaceHandle fh_first = _mesh->face_handle(heh_first);
+        MyMesh::FaceHandle fh_second = _mesh->face_handle(heh_second);
+        MyMesh::VertexHandle common_vertex = _mesh->to_vertex_handle(heh_first);
+
+        MyMesh::VertexHandle vh_list[3];
+        vh_list[0] = common_vertex;
+
+        // TODO: mettre la boucle for dans une surchage de la méthode getNormalFace
+        int i = 0;
+        for (MyMesh::FaceVertexIter fv_it = _mesh->fv_iter(fh_first); fv_it.is_valid(); fv_it++) {
+            if( *fv_it != common_vertex) {
+                vh_list[i+1] = *fv_it;
+                i++;
+            }
+        }
+
+        MyMesh::Point first_normal_face = getNormalFace(_mesh, vh_list[0], vh_list[1], vh_list[2]);
+
+        i = 0;
+        for (MyMesh::FaceVertexIter fv_it = _mesh->fv_iter(fh_second); fv_it.is_valid(); fv_it++) {
+            if( *fv_it != common_vertex) {
+                vh_list[i+1] = *fv_it;
+                i++;
+            }
+        }
+
+        MyMesh::Point second_normal_face = getNormalFace(_mesh, vh_list[0], vh_list[1], vh_list[2]);
+
+        // calcul d'angle face face par rapport a la normal
+        float angle = angle_vector(first_normal_face, second_normal_face);
+        qDebug() << angle;
+    }
+}
+
 MyMesh::Point MainWindow::getNormalPoint(MyMesh *_mesh, VertexHandle vertexFromFace)
 {
     std::vector<VertexHandle> v_vertex;
@@ -905,40 +951,7 @@ void MainWindow::on_pushButton_fv_angle_clicked()
 
 void MainWindow::on_getDiedreAngle_clicked()
 {
-    //condition : que les face soit toutes triangulaires
-    QVector<VertexHandle> edge;
-    QList<int> vertexlist;
-
-    //on créer un liste de d'arret
-    for(MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); v_it++)
-    {
-        VertexHandle vh1 = *v_it;
-        //edge.append(vh1);
-        for(MyMesh::VertexVertexIter curVertex = mesh.vv_iter(vh1); curVertex.is_valid(); curVertex ++)
-        {
-            VertexHandle vh2 = *curVertex;
-
-            vertexlist.append(vh1.idx());
-            vertexlist.append(vh2.idx());
-
-        }
-
-    }
-
-    //On regarde les face commune a ces arête et on applique traitement
-
-    for(MyMesh::FaceIter f_it = mesh.faces_begin(); f_it != mesh.faces_end(); f_it++)
-    {
-        FaceHandle f = *f_it;
-        for(MyMesh::FaceVertexIter curVertex = mesh.fv_iter(f); curVertex.is_valid(); curVertex ++)
-        {
-
-
-        }
-    }
-
-
-
+    dihedralAngles(&mesh);
 }
 
 void MainWindow::on_pushButton_save_clicked()
