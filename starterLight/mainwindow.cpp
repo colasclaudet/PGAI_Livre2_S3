@@ -137,6 +137,20 @@ MyMesh::Point MainWindow::getNormalFace(MyMesh* _mesh,VertexHandle v0, VertexHan
 
 }
 
+void MainWindow::keyPressEvent(QKeyEvent *e)
+{
+    switch (e->key())
+    {
+        case Qt::Key_A :
+            color_change = (color_change +1)%7;
+            angles_normal_points(&mesh);
+            qDebug()<<"key event";
+            displayMesh(&mesh);
+
+    }
+
+}
+
 MyMesh::Point MainWindow::getNormalPoint(MyMesh *_mesh, VertexHandle vertexFromFace)
 {
     std::vector<VertexHandle> v_vertex;
@@ -244,8 +258,20 @@ void MainWindow::putVertexColor(QVector <float> angles, float degresMin, float d
         colorVertex = (int)colorIntencity*interval;
         if(colorVertex>255)
             colorVertex=255;
-
-        mesh.set_color(curVert, MyMesh::Color(0,colorVertex, 0));
+        if(color_change==0)
+            mesh.set_color(curVert, MyMesh::Color(0,colorVertex, 0));
+        if(color_change==1)
+            mesh.set_color(curVert, MyMesh::Color(0,0, colorVertex));
+        if(color_change==2)
+            mesh.set_color(curVert, MyMesh::Color(colorVertex,0, 0));
+        if(color_change==3)
+            mesh.set_color(curVert, MyMesh::Color(colorVertex,colorVertex, 0));
+        if(color_change==4)
+            mesh.set_color(curVert, MyMesh::Color(colorVertex,0, colorVertex));
+        if(color_change==5)
+            mesh.set_color(curVert, MyMesh::Color(0,colorVertex, colorVertex));
+        if(color_change==6)
+            mesh.set_color(curVert, MyMesh::Color(colorVertex,colorVertex, colorVertex));
     }
     mesh.update_normals();
     //this->mesh = mesh;
