@@ -147,17 +147,17 @@ void MainWindow::dihedralAngles(MyMesh *_mesh)
      */
 
     for (MyMesh::EdgeIter e_it = _mesh->edges_sbegin(); e_it != _mesh->edges_end(); e_it++) {
-        MyMesh::HalfedgeHandle heh_first = _mesh->halfedge_handle(e_it, 0);
-        MyMesh::HalfedgeHandle heh_second = _mesh->halfedge_handle(e_it, 1);
+        MyMesh::HalfedgeHandle heh_first = _mesh->halfedge_handle(*e_it, 0);
+        MyMesh::HalfedgeHandle heh_second = _mesh->halfedge_handle(*e_it, 1);
         MyMesh::FaceHandle fh_first = _mesh->face_handle(heh_first);
         MyMesh::FaceHandle fh_second = _mesh->face_handle(heh_second);
         MyMesh::VertexHandle common_vertex_from_heh_first = _mesh->to_vertex_handle(heh_first);
-        MyMesh::VertexHandle common_vertex_from_heh_second = _mesh->from_vertex_handle(heh_second);
+        //MyMesh::VertexHandle common_vertex_from_heh_second = _mesh->from_vertex_handle(heh_second);
 
         MyMesh::VertexHandle common_opposite_vertex_from_heh_first = _mesh->from_vertex_handle(heh_first);
 
         // vertex
-        if (common_vertex_from_heh_first.idx() == common_vertex_from_heh_second.idx()) {
+        if (common_vertex_from_heh_first.idx() == common_vertex_from_heh_first.idx()) {
                 // -- rouge
             _mesh->set_color(_mesh->vertex_handle(static_cast<unsigned>(common_vertex_from_heh_first.idx())), MyMesh::Color(255, 0, 0));
             _mesh->data(_mesh->vertex_handle(static_cast<unsigned>(common_vertex_from_heh_first.idx()))).thickness = 5;
@@ -184,8 +184,8 @@ void MainWindow::dihedralAngles(MyMesh *_mesh)
         int i = 0;
         for (MyMesh::FaceVertexIter fv_it = _mesh->fv_iter(fh_first); fv_it.is_valid(); fv_it++) {
             if((*fv_it != common_vertex_from_heh_first) && (*fv_it != common_opposite_vertex_from_heh_first)) {
-                qDebug() << "test";
-                vh_list[i/*+1*/] = *fv_it;
+                qDebug() << "test " << i;
+                vh_list[2/*i+1*/] = *fv_it;
                 // -- violet
                 _mesh->set_color(_mesh->vertex_handle(static_cast<unsigned>(fv_it->idx())), MyMesh::Color(255, 0, 255));
                 _mesh->data(_mesh->vertex_handle(static_cast<unsigned>(fv_it->idx()))).thickness = 5;
@@ -196,6 +196,8 @@ void MainWindow::dihedralAngles(MyMesh *_mesh)
             i++;
         }
 
+        qDebug() << vh_list[0].idx() << " " << vh_list[1].idx() << " " << vh_list[2].idx();
+
         MyMesh::Point first_normal_face = getNormalFace(_mesh, vh_list[0], vh_list[1], vh_list[2]);
 
         //vh_list[0] = common_vertex_from_heh_second;
@@ -205,8 +207,9 @@ void MainWindow::dihedralAngles(MyMesh *_mesh)
         // ---
         i = 0;
         for (MyMesh::FaceVertexIter fv_it = _mesh->fv_iter(fh_second); fv_it.is_valid(); fv_it++) {
-            if((*fv_it != common_vertex_from_heh_second) && (*fv_it != common_opposite_vertex_from_heh_first)) {
-                vh_list[i/*+1*/] = *fv_it;
+            if((*fv_it != common_vertex_from_heh_first) && (*fv_it != common_opposite_vertex_from_heh_first)) {
+                qDebug() << "test " << i;
+                vh_list[2/*i+1*/] = *fv_it;
                 // -- violet
                 _mesh->set_color(_mesh->vertex_handle(static_cast<unsigned>(fv_it->idx())), MyMesh::Color(255, 0, 255));
                 _mesh->data(_mesh->vertex_handle(static_cast<unsigned>(fv_it->idx()))).thickness = 5;
@@ -217,11 +220,14 @@ void MainWindow::dihedralAngles(MyMesh *_mesh)
             i++;
         }
 
+        qDebug() << vh_list[0].idx() << " " << vh_list[1].idx() << " " << vh_list[2].idx();
+
         MyMesh::Point second_normal_face = getNormalFace(_mesh, vh_list[0], vh_list[1], vh_list[2]);
 
         // calcul d'angle face face par rapport a la normal
         float angle = angle_vector(first_normal_face, second_normal_face);
-        qDebug() << angle;
+        qDebug() << "angle " << __FUNCTION__ << " : : "<< angle;
+        qDebug() << "angle openmesh function " << _mesh->calc_dihedral_angle(*e_it);
         break; // <=== temporaire
     }
     displayMesh(_mesh); // <=== temporaire
