@@ -58,8 +58,14 @@ public:
     MyMesh::Point getBarycenterFromFace(VertexHandle vh ,FaceHandle fh,MyMesh* _mesh);
     MyMesh::Point getNormalFace (MyMesh* _mesh,VertexHandle v0,VertexHandle v1, VertexHandle v2);
     //std::vector<MyMesh::Point> getNormalFace (MyMesh* _mesh,VertexHandle v1, VertexHandle v2);// getNormalFace (MyMesh* _mesh,VertexHandle vertexFromFace, float barycentre);
-    int color_change=0;
-    void keyPressEvent(QKeyEvent * e);
+
+    /**
+     * @brief dihedralAngles
+     * @param _mesh
+     * @details Pour chaque arête calculer l'angle entre les 2 normales des 2 faces concourantes.
+     */
+    void dihedralAngles(MyMesh* _mesh);
+
 private slots:
 
     void on_pushButton_chargement_clicked();

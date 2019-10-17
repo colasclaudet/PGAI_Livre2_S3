@@ -137,17 +137,126 @@ MyMesh::Point MainWindow::getNormalFace(MyMesh* _mesh,VertexHandle v0, VertexHan
 
 }
 
-void MainWindow::keyPressEvent(QKeyEvent *e)
+void MainWindow::dihedralAngles(MyMesh *_mesh)
 {
-    switch (e->key())
-    {
-        case Qt::Key_A :
-            color_change = (color_change +1)%7;
-            angles_normal_points(&mesh);
-            qDebug()<<"key event";
-            displayMesh(&mesh);
+    std::vector<int> diedrangle(10); // tableau contenant le nbr d'angle diedre < 10% puis à 20% ...jusqu'à 100%
 
+    for (MyMesh::EdgeIter e_it = mesh.edges_sbegin(); e_it != mesh.edges_end(); e_it++)
+    {
+        float angle_diedreCourant = mesh.calc_dihedral_angle(*e_it);
+        angle_diedreCourant = angle_diedreCourant/(3.1415/180);
+
+        //qDebug()<<angle_diedreCourant;
+        int angle_diedreCourantArrondi = angle_diedreCourant/10; //on pert la partit decimale
+
+        angle_diedreCourantArrondi = angle_diedreCourantArrondi*10; // on récupère la dizaine coorespondant ,10,20,30...
+
+        //qDebug()<<(*e_it).idx()<<"arrondi "<<angle_diedreCourantArrondi;
+
+        diedrangle[angle_diedreCourantArrondi/10]++;
     }
+
+    for(int i=0; i<10; i++)
+    {
+        qDebug()<<diedrangle[i]<<" : "<<i*10<<"degré";
+    }
+
+
+    //qDebug() << __FUNCTION__;
+    /**
+     * @brief dihedralAngles
+     * @param _mesh
+     * @details Pour chaque arête calculer l'angle entre les 2 normales des 2 faces concourantes.
+     */
+    /*
+    for (MyMesh::EdgeIter e_it = _mesh->edges_sbegin(); e_it != _mesh->edges_end(); e_it++) {
+        MyMesh::HalfedgeHandle heh_first = _mesh->halfedge_handle(*e_it, 0);
+        MyMesh::HalfedgeHandle heh_second = _mesh->halfedge_handle(*e_it, 1);
+        MyMesh::FaceHandle fh_first = _mesh->face_handle(heh_first);
+        MyMesh::FaceHandle fh_second = _mesh->face_handle(heh_second);
+        MyMesh::VertexHandle common_vertex_from_heh_first = _mesh->to_vertex_handle(heh_first);
+        MyMesh::VertexHandle common_vertex_from_heh_second = _mesh->from_vertex_handle(heh_second);
+
+        MyMesh::VertexHandle common_opposite_vertex_from_heh_first = _mesh->from_vertex_handle(heh_first);
+
+        // vertex
+        if (common_vertex_from_heh_first.idx() == common_vertex_from_heh_first.idx()) {
+             // -- rouge
+            _mesh->set_color(_mesh->vertex_handle(static_cast<unsigned>(common_vertex_from_heh_first.idx())), MyMesh::Color(255, 0, 0));
+            _mesh->data(_mesh->vertex_handle(static_cast<unsigned>(common_vertex_from_heh_first.idx()))).thickness = 5;
+        }
+            // -- jaune
+        _mesh->set_color(_mesh->vertex_handle(static_cast<unsigned>(common_opposite_vertex_from_heh_first.idx())), MyMesh::Color(255, 255, 0));
+        _mesh->data(_mesh->vertex_handle(static_cast<unsigned>(common_opposite_vertex_from_heh_first.idx()))).thickness = 5;
+        // edge -- vert
+        _mesh->set_color(*e_it, MyMesh::Color(0, 255, 0));
+        _mesh->data(*e_it).thickness = 2;
+        // face -- bleu
+        _mesh->set_color(_mesh->face_handle(static_cast<unsigned>(fh_first.idx())), MyMesh::Color(0, 0, 255));
+        _mesh->set_color(_mesh->face_handle(static_cast<unsigned>(fh_second.idx())), MyMesh::Color(0, 0, 255));
+        //displayMesh(_mesh);
+
+        MyMesh::VertexHandle vh_list[3];
+
+        // TODO: mettre la boucle for dans une surchage de la méthode getNormalFace
+        //vh_list[0] = common_vertex_from_heh_first;
+        // ---
+        vh_list[0] = common_vertex_from_heh_first;
+        vh_list[1] = common_opposite_vertex_from_heh_first;
+        // ---
+        int i = 0;
+        for (MyMesh::FaceVertexIter fv_it = _mesh->fv_iter(fh_first); fv_it.is_valid(); fv_it++) {
+            if((*fv_it != common_vertex_from_heh_first) && (*fv_it != common_opposite_vertex_from_heh_first)) {
+                //qDebug() << "test " << i;*/
+                //vh_list[2/*i+1*/] = *fv_it;
+                // -- violet
+               /* _mesh->set_color(_mesh->vertex_handle(static_cast<unsigned>(fv_it->idx())), MyMesh::Color(255, 0, 255));
+                _mesh->data(_mesh->vertex_handle(static_cast<unsigned>(fv_it->idx()))).thickness = 5;
+                //i++;
+            } else {
+                //qDebug() << "check1";
+            }
+            i++;
+        }
+        qDebug() << "first list";
+        qDebug() << vh_list[0].idx() << " " << vh_list[1].idx() << " " << vh_list[2].idx();
+
+        MyMesh::Point first_normal_face = getNormalFace(_mesh, vh_list[0], vh_list[1], vh_list[2]);
+        qDebug() << "first normal coordonne" <<first_normal_face[0]<<first_normal_face[1]<<first_normal_face[2];
+
+        //vh_list[0] = common_vertex_from_heh_second;
+        // ---
+        vh_list[0] = common_vertex_from_heh_first;
+        vh_list[1] = common_opposite_vertex_from_heh_first;
+        // ---
+        i = 0;
+        for (MyMesh::FaceVertexIter fv_it = _mesh->fv_iter(fh_second); fv_it.is_valid(); fv_it++) {
+            if((*fv_it != common_vertex_from_heh_first) && (*fv_it != common_opposite_vertex_from_heh_first)) {
+                //qDebug() << "test " << i;*/
+                //vh_list[2/*i+1*/] = *fv_it;
+                // -- violet
+                /*_mesh->set_color(_mesh->vertex_handle(static_cast<unsigned>(fv_it->idx())), MyMesh::Color(255, 0, 255));
+                _mesh->data(_mesh->vertex_handle(static_cast<unsigned>(fv_it->idx()))).thickness = 5;
+                i++;
+            } else {
+               // qDebug() << "check2";
+            }
+            i++;
+        }
+        qDebug() << "second list";
+        qDebug() << vh_list[0].idx() << " " << vh_list[1].idx() << " " << vh_list[2].idx();
+
+        MyMesh::Point second_normal_face = getNormalFace(_mesh, vh_list[0], vh_list[1], vh_list[2]);
+        qDebug() << "first normal coordonne" <<second_normal_face[0]<<second_normal_face[1]<<second_normal_face[2];
+        // calcul d'angle face face par rapport a la normal
+        //float angle = angle_vector(first_normal_face, second_normal_face);
+        //float angle = angle_vector(first_normal_face, second_normal_face);
+        //qDebug() << "angle " << __FUNCTION__ << " : : "<< angle;
+        //qDebug() << "angle openmesh function " << _mesh->calc_dihedral_angle(*e_it);
+        //break; // <=== temporaire
+    }
+    displayMesh(_mesh); // <=== temporaire*/
+
 
 }
 
@@ -258,20 +367,8 @@ void MainWindow::putVertexColor(QVector <float> angles, float degresMin, float d
         colorVertex = (int)colorIntencity*interval;
         if(colorVertex>255)
             colorVertex=255;
-        if(color_change==0)
-            mesh.set_color(curVert, MyMesh::Color(0,colorVertex, 0));
-        if(color_change==1)
-            mesh.set_color(curVert, MyMesh::Color(0,0, colorVertex));
-        if(color_change==2)
-            mesh.set_color(curVert, MyMesh::Color(colorVertex,0, 0));
-        if(color_change==3)
-            mesh.set_color(curVert, MyMesh::Color(colorVertex,colorVertex, 0));
-        if(color_change==4)
-            mesh.set_color(curVert, MyMesh::Color(colorVertex,0, colorVertex));
-        if(color_change==5)
-            mesh.set_color(curVert, MyMesh::Color(0,colorVertex, colorVertex));
-        if(color_change==6)
-            mesh.set_color(curVert, MyMesh::Color(colorVertex,colorVertex, colorVertex));
+
+        mesh.set_color(curVert, MyMesh::Color(0,colorVertex, 0));
     }
     mesh.update_normals();
     //this->mesh = mesh;
@@ -931,40 +1028,7 @@ void MainWindow::on_pushButton_fv_angle_clicked()
 
 void MainWindow::on_getDiedreAngle_clicked()
 {
-    //condition : que les face soit toutes triangulaires
-    QVector<VertexHandle> edge;
-    QList<int> vertexlist;
-
-    //on créer un liste de d'arret
-    for(MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); v_it++)
-    {
-        VertexHandle vh1 = *v_it;
-        //edge.append(vh1);
-        for(MyMesh::VertexVertexIter curVertex = mesh.vv_iter(vh1); curVertex.is_valid(); curVertex ++)
-        {
-            VertexHandle vh2 = *curVertex;
-
-            vertexlist.append(vh1.idx());
-            vertexlist.append(vh2.idx());
-
-        }
-
-    }
-
-    //On regarde les face commune a ces arête et on applique traitement
-
-    for(MyMesh::FaceIter f_it = mesh.faces_begin(); f_it != mesh.faces_end(); f_it++)
-    {
-        FaceHandle f = *f_it;
-        for(MyMesh::FaceVertexIter curVertex = mesh.fv_iter(f); curVertex.is_valid(); curVertex ++)
-        {
-
-
-        }
-    }
-
-
-
+    dihedralAngles(&mesh);
 }
 
 void MainWindow::on_pushButton_save_clicked()
